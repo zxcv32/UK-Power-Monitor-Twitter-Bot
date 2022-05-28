@@ -1,4 +1,4 @@
-FROM golang:1.18 AS build
+FROM golang:1.18.2-stretch AS build
 WORKDIR /bot
 COPY go.mod ./
 COPY go.sum ./
@@ -7,7 +7,7 @@ RUN go mod verify
 COPY *.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -installsuffix cgo -tags=nomsgpack -a -o app .
 
-FROM golang:1.18
+FROM golang:1.18.2-stretch
 WORKDIR /app
 COPY --from=build /bot/app ./app
 CMD ["./app"]
