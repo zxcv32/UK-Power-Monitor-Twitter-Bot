@@ -16,5 +16,6 @@
 
 # Project
 .idea
+env
 .env
 .env.back
