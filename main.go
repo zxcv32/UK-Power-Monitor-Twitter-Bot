@@ -202,11 +202,17 @@ func main() {
 			log.Printf("Status change detected -> %v | %v\n", lastPowerStatus, lastTweetStatus)
 			if len(lastPowerStatus) < 1 || len(lastTweetStatus) < 1 {
 				// disallow empty status
-				log.Printf("disallow atleast one empty status-> %+v | %+v", lastPowerStatus, lastTweetStatus)
+				log.Printf("disallow atleast one empty status-> %+v | %+v", lastPowerStatus,
+					lastTweetStatus)
 				continue
 			}
 			tz, _ := time.LoadLocation("Asia/Kolkata")
-			tweetContent := fmt.Sprintf("Power Status: %s\nDetection Timestamp: %s", lastPowerStatus, time.Now().In(tz).Format(time.RFC1123))
+			tweetEmoji := "🔴"
+			if lastPowerStatus == "live" {
+				tweetEmoji = "🟢"
+			}
+			tweetContent := fmt.Sprintf("Power Status: %s %s\nDetection Timestamp: %s",
+				lastPowerStatus, tweetEmoji, time.Now().In(tz).Format(time.RFC1123))
 			tw, err := tweet(client, tweetContent)
 			errorString := ""
 			var twId int64 = -1 // Not tweet was made
