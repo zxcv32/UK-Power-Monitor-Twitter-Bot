@@ -119,9 +119,11 @@ func writeTweetToDb(config *InfluxDbConfig, data TweetDbRecord) {
 }
 
 func getLastPowerStatus(config *InfluxDbConfig) string {
+	// Range start is -2s because there may be few milliseconds delay when the sensor data is
+	// written and this bot reads last status from db.
 	response, err := queryInfluxDb(config, `
 			from(bucket: "`+config.BucketPower+`")
-			  |> range(start: -1s, stop: now())
+			  |> range(start: -2s, stop: now())
 			  |> filter(fn: (r) => r["_measurement"] == "lab")
 			  |> filter(fn: (r) => r["_field"] == "status")
 			  |> yield(name: "last")
@@ -171,7 +173,7 @@ func getLastTweetStatus(config *InfluxDbConfig) string {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Errorln("No .env file found")
+		log.Warningln("No .env file found")
 	}
 	twitterCredentials := TwitterCredentials{
 		ApiKey:       os.Getenv("API_KEY"),
@@ -197,13 +199,20 @@ func main() {
 		lastPowerStatus := getLastPowerStatus(&influxDbConfig)
 		lastTweetStatus := getLastTweetStatus(&influxDbConfig)
 		if lastTweetStatus != lastPowerStatus {
-			tweetContent := fmt.Sprintf("Power Status: %s\nDetection Timestamp: %s", lastPowerStatus, time.Now().Format(time.RFC1123))
+			log.Printf("Status change detected -> %v | %v\n", lastPowerStatus, lastTweetStatus)
+			if len(lastPowerStatus) < 1 || len(lastTweetStatus) < 1 {
+				// disallow empty status
+				log.Printf("disallow atleast one empty status-> %+v | %+v", lastPowerStatus, lastTweetStatus)
+				continue
+			}
+			tz, _ := time.LoadLocation("Asia/Kolkata")
+			tweetContent := fmt.Sprintf("Power Status: %s\nDetection Timestamp: %s", lastPowerStatus, time.Now().In(tz).Format(time.RFC1123))
 			tw, err := tweet(client, tweetContent)
 			errorString := ""
-			var twId int64 = -1
+			var twId int64 = -1 // Not tweet was made
 			if err != nil {
 				errorString = err.Error()
-				log.Errorln()
+				log.Errorln(errorString)
 			} else {
 				twId = tw.ID
 			}
