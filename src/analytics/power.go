@@ -33,15 +33,18 @@ func getLocalTime() string {
 func PowerUpTweet(config *influxdb.InfluxDbConfig) string {
 	// TODO query db for more data
 	tweetEmoji := "🟢"
-	content := fmt.Sprintf("Power Status: %s %s\nDetection Timestamp: %s",
+	content := fmt.Sprintf("Power Status: %s %s\n"+
+		"Detection Timestamp: %s",
 		"live", tweetEmoji, getLocalTime())
 	return content
 }
 
 func PowerDownTweet(config *influxdb.InfluxDbConfig) string {
-	// TODO query db for more data
 	tweetEmoji := "🔴"
-	content := fmt.Sprintf("Power Status: %s %s\nDetection Timestamp: %s",
-		"down", tweetEmoji, getLocalTime())
+	content := fmt.Sprintf("Power Status: %s %s\n"+
+		"Detection Timestamp: %s\n"+
+		"Outages in last 6h,12h,24h: %s",
+		"down", tweetEmoji, getLocalTime(),
+		influxdb.CountOutages(config, []string{"-6h", "-12h", "-24h"}))
 	return content
 }

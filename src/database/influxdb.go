@@ -6,6 +6,7 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 // InfluxDbConfig for reading InfluxDB data
@@ -72,32 +73,17 @@ func WriteToDb(config *InfluxDbConfig, data TweetDbRecord) {
 func GetLastPowerStatus(config *InfluxDbConfig) string {
 	// Range start is -2s because there may be few milliseconds delay when the sensor data is
 	// written and this bot reads last status from db.
-	response, err := query(config, `
+	return getQueryResult(config, `
 			from(bucket: "`+config.BucketPower+`")
 			  |> range(start: -2s, stop: now())
 			  |> filter(fn: (r) => r["_measurement"] == "lab")
 			  |> filter(fn: (r) => r["_field"] == "status")
 			  |> yield(name: "last")
 		`)
-	if err != nil {
-		log.Errorln(err)
-	}
-	var result []string
-	for response.Next() {
-		values := response.Record().Values()
-		value, exists := values["_value"]
-		if exists {
-			result = append(result, fmt.Sprintf(fmt.Sprintf("%s", value)))
-		}
-	}
-	if len(result) < 1 {
-		return ""
-	}
-	return result[0]
 }
 
 func GetLastTweetStatus(config *InfluxDbConfig) string {
-	response, err := query(config, `
+	return getQueryResult(config, `
 			from(bucket: "`+config.BucketTweet+`")
 			  |> range(start: -1d)
 			  |> filter(fn: (r) => r["_measurement"] == "twitter")
@@ -105,6 +91,26 @@ func GetLastTweetStatus(config *InfluxDbConfig) string {
 			  |> filter(fn: (r) => r["tweet"] == "monitor")
 		      |> last()
 		`)
+}
+
+func CountOutages(config *InfluxDbConfig, intervals []string) string {
+	var results []string
+	for _, interval := range intervals {
+		results = append(results, getQueryResult(config, `
+			from(bucket: "`+config.BucketTweet+`")
+			  |> range(start: `+interval+`)
+			  |> filter(fn: (r) => r["_measurement"] == "twitter")
+			  |> filter(fn: (r) => r["_field"] == "status")
+			  |> filter(fn: (r) => r["_value"] == "down")
+			  |> count()
+			  |> yield(name: "count")
+		`))
+	}
+	return strings.Join(results, ",")
+}
+
+func getQueryResult(config *InfluxDbConfig, queryStr string) string {
+	response, err := query(config, queryStr)
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -113,7 +119,7 @@ func GetLastTweetStatus(config *InfluxDbConfig) string {
 		values := response.Record().Values()
 		value, exists := values["_value"]
 		if exists {
-			result = append(result, fmt.Sprintf(fmt.Sprintf("%s", value)))
+			result = append(result, fmt.Sprint(value))
 		}
 	}
 	if len(result) < 1 {

@@ -9,5 +9,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -installsuffix cgo -tags=nomsgpack -a -o a
 
 FROM golang:1.18.2-stretch
 WORKDIR /app
+ENV GIN_MODE=release
 COPY --from=build /bot/app ./app
 CMD ["./app"]
