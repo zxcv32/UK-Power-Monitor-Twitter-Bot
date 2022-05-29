@@ -4,6 +4,7 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	log "github.com/sirupsen/logrus"
+	influxdb "zxcv32/upmtb/src/database"
 )
 
 // TwitterCredentials for oauth1.0a authentication
@@ -40,18 +41,30 @@ func build(creds *TwitterCredentials) (*twitter.Client, error) {
 }
 
 // Tweet stat
-func Tweet(twitterCredentials *TwitterCredentials, tweetContent string) (*twitter.Tweet, error) {
+func Tweet(twitterCredentials *TwitterCredentials, tweetContent string) influxdb.TweetDbRecord {
 	client, err := build(twitterCredentials)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	var twId int64 = -1 // Not tweet was made
+
+	errorString := ""
 	tweet, resp, err := client.Statuses.Update(tweetContent, nil)
 	if err != nil {
-		return nil, err
-		log.Debugln(err)
+		errorString = err.Error()
+		log.Errorln(errorString)
+	} else {
+		twId = tweet.ID
 	}
 	log.Debugf("Status: %s\n", resp.Status)
 	log.Debugln("Tweet ID: %d\n", tweet.ID)
-	return tweet, nil
+
+	tweetDbRecord := influxdb.TweetDbRecord{
+		TweetContent: tweetContent,
+		TweetId:      twId,
+		Error:        errorString,
+	}
+
+	return tweetDbRecord
 }

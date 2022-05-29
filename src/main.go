@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
+	"zxcv32/upmtb/src/analytics"
 	influxdb "zxcv32/upmtb/src/database"
 	"zxcv32/upmtb/src/twitter"
 )
@@ -30,40 +30,21 @@ func main() {
 		Token:       os.Getenv("INFLUXDB_TOKEN"),
 	}
 
-	for range time.Tick(1 * time.Second) {
-		lastPowerStatus := influxdb.GetLastPowerStatus(&influxDbConfig)
-		lastTweetStatus := influxdb.GetLastTweetStatus(&influxDbConfig)
-		if lastTweetStatus != lastPowerStatus {
-			log.Printf("Status change detected -> %v | %v\n", lastPowerStatus, lastTweetStatus)
-			if len(lastPowerStatus) < 1 || len(lastTweetStatus) < 1 {
-				// disallow empty status
-				log.Printf("disallow atleast one empty status-> %+v | %+v", lastPowerStatus,
-					lastTweetStatus)
-				continue
-			}
-			tz, _ := time.LoadLocation("Asia/Kolkata")
-			tweetEmoji := "🔴"
-			if lastPowerStatus == "live" {
-				tweetEmoji = "🟢"
-			}
-			tweetContent := fmt.Sprintf("Power Status: %s %s\nDetection Timestamp: %s",
-				lastPowerStatus, tweetEmoji, time.Now().In(tz).Format(time.RFC1123))
-			tw, err := twitter.Tweet(&twitterCredentials, tweetContent)
-			errorString := ""
-			var twId int64 = -1 // Not tweet was made
-			if err != nil {
-				errorString = err.Error()
-				log.Errorln(errorString)
-			} else {
-				twId = tw.ID
-			}
-			tweetDbRecord := influxdb.TweetDbRecord{
-				Status:       lastPowerStatus,
-				TweetContent: tweetContent,
-				TweetId:      twId,
-				Error:        errorString,
-			}
-			influxdb.WriteToDb(&influxDbConfig, tweetDbRecord)
+	for range time.Tick(time.Second) {
+		state := analytics.GetState(&influxDbConfig)
+		var content string
+		switch state {
+		case "live":
+			content = analytics.PowerUpTweet(&influxDbConfig)
+		case "down":
+			content = analytics.PowerDownTweet(&influxDbConfig)
+		case "skip": // Do nothing, duh!
+			continue
+		default:
+			log.Errorf("Unknwon state: %s", state)
 		}
+		tweetDbRecord := twitter.Tweet(&twitterCredentials, content)
+		tweetDbRecord.Status = state
+		influxdb.WriteToDb(&influxDbConfig, tweetDbRecord)
 	}
 }
