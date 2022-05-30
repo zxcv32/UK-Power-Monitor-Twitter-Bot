@@ -7,6 +7,7 @@ import (
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	log "github.com/sirupsen/logrus"
 	"strings"
+	"time"
 )
 
 // InfluxDbConfig for reading InfluxDB data
@@ -107,6 +108,36 @@ func CountOutages(config *InfluxDbConfig, intervals []string) string {
 		`))
 	}
 	return strings.Join(results, ",")
+}
+
+func CalculateOutagesDuration(config *InfluxDbConfig) string {
+	response, err := query(config, `
+		from(bucket: "`+config.BucketTweet+`")
+  		  |> range(start: 0, stop: now())
+  		  |> filter(fn: (r) => r["_measurement"] == "twitter")
+		  |> tail(n: 1)
+		`)
+	if err != nil {
+		log.Errorln(err)
+	}
+	var result []string
+	for response.Next() {
+		if len(result) > 0 {
+			break
+		}
+		values := response.Record().Values()
+		value, exists := values["_time"]
+		if exists {
+			fmtTime := fmt.Sprint(value)
+			recordTime, _ := time.Parse("2006-01-02 15:04:05.999999999 +0000 UTC", fmtTime)
+			duration := time.Now().Sub(recordTime)
+			result = append(result, duration.Truncate(time.Second).String())
+		}
+	}
+	if len(result) < 1 {
+		return ""
+	}
+	return result[0]
 }
 
 func getQueryResult(config *InfluxDbConfig, queryStr string) string {
