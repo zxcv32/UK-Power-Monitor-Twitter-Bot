@@ -45,6 +45,7 @@ func main() {
 		}
 		tweetDbRecord := twitter.Tweet(&twitterCredentials, content)
 		tweetDbRecord.Status = state
+		log.Infof("Tweet state: %s", state)
 		influxdb.WriteToDb(&influxDbConfig, tweetDbRecord)
 	}
 }

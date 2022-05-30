@@ -4,6 +4,7 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	influxdb "zxcv32/upmtb/src/database"
 )
 
@@ -47,7 +48,7 @@ func Tweet(twitterCredentials *TwitterCredentials, tweetContent string) influxdb
 		log.Fatalln(err)
 	}
 
-	var twId int64 = -1 // Not tweet was made
+	var twId = "" // Not tweet was made
 
 	errorString := ""
 	tweet, resp, err := client.Statuses.Update(tweetContent, nil)
@@ -55,7 +56,7 @@ func Tweet(twitterCredentials *TwitterCredentials, tweetContent string) influxdb
 		errorString = err.Error()
 		log.Errorln(errorString)
 	} else {
-		twId = tweet.ID
+		twId = strconv.FormatInt(tweet.ID, 10)
 	}
 	log.Debugf("Status: %s\n", resp.Status)
 	log.Debugln("Tweet ID: %d\n", tweet.ID)

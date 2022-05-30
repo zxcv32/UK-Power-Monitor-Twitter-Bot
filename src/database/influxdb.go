@@ -22,7 +22,7 @@ type InfluxDbConfig struct {
 type TweetDbRecord struct {
 	Status       string
 	TweetContent string
-	TweetId      int64
+	TweetId      string
 	Error        string
 }
 
@@ -63,7 +63,7 @@ func WriteToDb(config *InfluxDbConfig, data TweetDbRecord) {
 		log.Errorln(err)
 		return
 	}
-	record := fmt.Sprintf(`%s,tweet=monitor id=%d,status="%s",content="%s",error="%s"`, config.BucketTweet, data.TweetId, data.Status, data.TweetContent, data.Error)
+	record := fmt.Sprintf(`%s,tweet=monitor id=%s,status="%s",content="%s",error="%s"`, config.BucketTweet, data.TweetId, data.Status, data.TweetContent, data.Error)
 	writeAPI := client.WriteAPI(config.Org, config.BucketTweet)
 	writeAPI.WriteRecord(record)
 	writeAPI.Flush()
