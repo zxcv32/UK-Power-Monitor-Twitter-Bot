@@ -43,8 +43,8 @@ func PowerDownTweet(config *influxdb.InfluxDbConfig) string {
 	tweetEmoji := "🔴"
 	content := fmt.Sprintf("Power Status: %s %s\n"+
 		"Detection Timestamp: %s\n"+
-		"Outages in last 6h,12h: %s",
+		"Outages in last 6h,12h,24h: %s",
 		"down", tweetEmoji, getLocalTime(),
-		influxdb.CountOutages(config, []string{"-6h", "-12h"}))
+		influxdb.CountOutages(config, []string{"-6h", "-12h", "-24h"}))
 	return content
 }
