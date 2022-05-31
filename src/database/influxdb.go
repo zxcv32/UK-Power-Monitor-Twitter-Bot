@@ -97,7 +97,7 @@ func GetLastTweetStatus(config *InfluxDbConfig) string {
 func CountOutages(config *InfluxDbConfig, intervals []string) string {
 	var results []string
 	for _, interval := range intervals {
-		results = append(results, getQueryResult(config, `
+		count := getQueryResult(config, `
 			from(bucket: "`+config.BucketTweet+`")
 			  |> range(start: `+interval+`)
 			  |> filter(fn: (r) => r["_measurement"] == "twitter")
@@ -105,7 +105,12 @@ func CountOutages(config *InfluxDbConfig, intervals []string) string {
 			  |> filter(fn: (r) => r["_value"] == "down")
 			  |> count()
 			  |> yield(name: "count")
-		`))
+		`)
+		value := "0"
+		if len(count) > 0 {
+			value = count
+		}
+		results = append(results, value)
 	}
 	return strings.Join(results, ",")
 }
