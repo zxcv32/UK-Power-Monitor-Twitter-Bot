@@ -8,8 +8,8 @@ import (
 	influxdb "zxcv32/upmtb/src/database"
 )
 
-// TwitterCredentials for oauth1.0a authentication
-type TwitterCredentials struct {
+// Credentials for oauth1.0a authentication
+type Credentials struct {
 	ApiKey       string
 	ApiSecret    string
 	AccessToken  string
@@ -17,7 +17,7 @@ type TwitterCredentials struct {
 }
 
 // build a Twitter client and validate credentials
-func build(creds *TwitterCredentials) (*twitter.Client, error) {
+func build(creds *Credentials) (*twitter.Client, error) {
 
 	config := oauth1.NewConfig(creds.ApiKey, creds.ApiSecret)
 	token := oauth1.NewToken(creds.AccessToken, creds.AccessSecret)
@@ -42,7 +42,7 @@ func build(creds *TwitterCredentials) (*twitter.Client, error) {
 }
 
 // Tweet stat
-func Tweet(twitterCredentials *TwitterCredentials, tweetContent string) influxdb.TweetDbRecord {
+func Tweet(twitterCredentials *Credentials, tweetContent string) influxdb.TweetDbRecord {
 	client, err := build(twitterCredentials)
 	if err != nil {
 		log.Fatalln(err)

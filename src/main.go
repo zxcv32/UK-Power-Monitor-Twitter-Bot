@@ -15,7 +15,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Warningln("No .env file found")
 	}
-	twitterCredentials := twitter.TwitterCredentials{
+	twitterCredentials := twitter.Credentials{
 		ApiKey:       os.Getenv("API_KEY"),
 		ApiSecret:    os.Getenv("API_SECRET"),
 		AccessToken:  os.Getenv("ACCESS_TOKEN"),
