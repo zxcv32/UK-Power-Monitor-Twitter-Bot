@@ -36,7 +36,7 @@ func PowerUpTweet(config *influxdb.InfluxDbConfig) string {
 	content := fmt.Sprintf(
 		"Power Status: %s %s\n"+
 			"Detection Timestamp: %s\n"+
-			"Outage Lasted: %s",
+			"Outage Duration: %s",
 		"live", tweetEmoji, getLocalTime(), duration)
 	return content
 }
