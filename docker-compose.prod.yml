@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   twitter-monitor-bot:
-    image: ghcr.io/zxcv32/uk-power-monitor-twitter-bot:main
+    image: zxcv32/uk-power-monitor-twitter-bot:main
     restart: always
     env_file:
       - .env
