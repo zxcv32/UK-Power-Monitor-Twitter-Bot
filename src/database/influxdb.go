@@ -6,6 +6,7 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -106,9 +107,15 @@ func CountOutages(config *InfluxDbConfig, intervals []string) string {
 			  |> count()
 			  |> yield(name: "count")
 		`)
-		value := "0"
+		value := "1"
 		if len(count) > 0 {
-			value = count
+			c, err := strconv.Atoi(count)
+			if nil != err {
+				log.Errorln(err.Error())
+			} else {
+				c++ // count this outage too
+				value = strconv.Itoa(c)
+			}
 		}
 		results = append(results, value)
 	}
