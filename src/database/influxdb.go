@@ -87,7 +87,7 @@ func GetLastPowerStatus(config *InfluxDbConfig) string {
 func GetLastTweetStatus(config *InfluxDbConfig) string {
 	return getQueryResult(config, `
 			from(bucket: "`+config.BucketTweet+`")
-			  |> range(start: -1d)
+			  |> range(start: -7d)
 			  |> filter(fn: (r) => r["_measurement"] == "twitter")
 			  |> filter(fn: (r) => r["_field"] == "status")
 			  |> filter(fn: (r) => r["tweet"] == "monitor")
