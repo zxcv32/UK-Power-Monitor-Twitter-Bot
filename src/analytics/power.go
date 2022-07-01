@@ -3,9 +3,12 @@ package analytics
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"strings"
 	"time"
 	influxdb "zxcv32/upmtb/src/database"
 )
+
+var twitterTags = [...]string{"#UPCL", "#Dehradun", "#Uttarakhand", "#PowerOutage"}
 
 func GetState(config *influxdb.InfluxDbConfig) string {
 	state := "skip"
@@ -36,8 +39,9 @@ func PowerUpTweet(config *influxdb.InfluxDbConfig) string {
 	content := fmt.Sprintf(
 		"Power Status: %s %s\n"+
 			"Detection Timestamp: %s\n"+
-			"Outage Duration: %s",
-		"live", tweetEmoji, getLocalTime(), duration)
+			"Outage Duration: %s\n\n"+
+			"%s",
+		"live", tweetEmoji, getLocalTime(), duration, strings.Join(twitterTags[:], " "))
 	return content
 }
 
@@ -45,8 +49,9 @@ func PowerDownTweet(config *influxdb.InfluxDbConfig) string {
 	tweetEmoji := "🔴"
 	content := fmt.Sprintf("Power Status: %s %s\n"+
 		"Detection Timestamp: %s\n"+
-		"Outages in last 6h,12h,24h: %s",
+		"Outages in last 6h,12h,24h: %s\n\n"+
+		"%s",
 		"down", tweetEmoji, getLocalTime(),
-		influxdb.CountOutages(config, []string{"-6h", "-12h", "-24h"}))
+		influxdb.CountOutages(config, []string{"-6h", "-12h", "-24h"}), strings.Join(twitterTags[:], " "))
 	return content
 }
