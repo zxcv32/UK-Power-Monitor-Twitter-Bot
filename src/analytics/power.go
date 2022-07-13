@@ -8,7 +8,7 @@ import (
 	influxdb "zxcv32/upmtb/src/database"
 )
 
-var twitterTags = [...]string{"#UPCL", "#Dehradun", "#Uttarakhand", "#PowerOutage"}
+var twitterTags = [...]string{"#UPCL", "#Dehradun", "#Uttarakhand", "#PowerOutage", "@MinOfPower"}
 
 func GetState(config *influxdb.InfluxDbConfig) string {
 	state := "skip"
