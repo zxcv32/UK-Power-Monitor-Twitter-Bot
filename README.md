@@ -36,3 +36,8 @@ Source data is generated from [UK-Power-Monitor](https://github.com/zxcV32/UK-Po
 1. Copy `docker-compose.prod.yml` to Docker host
 1. `docker-compose -f docker-compose.prod.yml pull`
 1. `docker-compose -f docker-compose.prod.yml up -d`
+
+**Note that the twitter bucket needs to have an initial value for the bot to compare**
+You can write the initial data using the `line protocol`
+
+```twitter,tweet=monitor id=-1,status="live",content="",error=""```
