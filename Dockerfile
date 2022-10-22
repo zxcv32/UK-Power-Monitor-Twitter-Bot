@@ -1,4 +1,4 @@
-FROM golang:1.18.3-stretch AS build
+FROM golang:1.18.7-bullseye AS build
 WORKDIR /bot/
 COPY go.mod ./
 COPY go.sum ./
@@ -7,7 +7,7 @@ RUN go mod verify
 COPY src ./src/
 RUN CGO_ENABLED=0 GOOS=linux go build -installsuffix cgo -tags=nomsgpack -a -o app ./src
 
-FROM golang:1.18.3-stretch
+FROM golang:1.18.7-bullseye
 WORKDIR /app
 ENV GIN_MODE=release
 COPY --from=build /bot/app ./app
